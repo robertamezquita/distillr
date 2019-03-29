@@ -3,7 +3,7 @@
 
 ## env vars
 language: r
-r: bioc-devel
+## r: bioc-devel
 
 sudo: false
 cache: packages
