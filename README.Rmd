@@ -13,9 +13,14 @@ knitr::opts_chunk$set(
 )
 ```
 
+<!-- badges: start -->
 [![Travis build status](https://travis-ci.com/robertamezquita/distillr.svg?branch=master)](https://travis-ci.org/robertamezquita/distillr)
 
 [![Coverage status](https://codecov.io/gh/robertamezquita/distillr/branch/master/graph/badge.svg)](https://codecov.io/github/robertamezquita/distillr?branch=master)
+
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
+<!-- badges: end -->
+
 
 # distillr
 
