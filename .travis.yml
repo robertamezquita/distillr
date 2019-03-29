@@ -2,9 +2,24 @@
 # settings adapted from r-lib/usethis
 
 ## env vars
-language: R
+language: r
+r: bioc-devel
+
 sudo: false
 cache: packages
+
+warnings_are_errors: false
+
+before_install:
+    - Rscript -e 'install.packages("devtools")'
+    - Rscript -e 'devtools::install(dependencies=TRUE)'
+
+r_build_args: "--no-manual --no-resave-data"
+r_check_args: "--no-build-vignettes --no-manual --timings"
+
+r_packages:
+  - covr
+  - BiocManager
 
 addons:
   apt:
@@ -22,8 +37,3 @@ matrix:
       script: Rscript -e 'pkgdown::deploy_site_github()'
       skip_cleanup: true
   - r: oldrel
-  - r: 3.3
-  - r: 3.2
-  - r: 3.1
-
-
