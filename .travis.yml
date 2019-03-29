@@ -2,8 +2,6 @@
 # settings adapted from r-lib/usethis
 
 ## env vars
-CODECOV_TOKEN="6ba9d327-b25a-495d-81e3-1dba4e67e5fb" # only required for private repos
-
 language: R
 sudo: false
 cache: packages
