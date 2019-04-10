@@ -93,12 +93,16 @@
 
         ts_df[[i]] <- data.frame(Tstat = tstat, Tsign = tsign, Tmean = tmean)[unique(regions), ]
     }
-
     names(ts_df) <- ts_names
 
+    ## Return the list of data frames of test statistics per comparison performed
     return(ts_df)
 }
 
+
+#############################################################
+# Internal functions.
+#############################################################
 
 .create_hat_matrix <- function(n) {
     ## Create Nadaraya-Watson Hat matrix
@@ -166,15 +170,6 @@
     ## Combine results and return ----------------------------------------------
     return(list(Tstat = ts_kn, Tsign = sign, Tmean = ts_mean))
 }
-
-#############################################################
-# Internal functions.
-#############################################################
-
-
-
-
-
 
 
 #############################################################
