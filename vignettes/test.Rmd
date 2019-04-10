@@ -1,0 +1,154 @@
+---
+title: "Testing"
+author: "Robert Amezquita"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+Testing out ideas here.
+
+
+# Data Representation
+
+## SCE representation of data
+
+```{r}
+library(SingleCellExperiment)
+library(tidyverse)
+
+## Simulate a dataset ==========================================================
+## create different numbers per group in this case
+## todo: vary nbin per region
+
+## data sim parameters
+n_groups <- 3
+nbin_per_region <- rep(100, n_groups)
+nregion <- rep(50, n_groups)
+n_per_group <- c(3, 4, 5)
+lambda_per_group <- c(10, 2, 5)
+labels_per_group <- c('A', 'B', 'C')
+
+## Simulator
+.sim_data <- function(nbin_per_region, nregion, nsample_per_group, lambda,
+                      group_id, row_id = 'bin') {
+    mat <- matrix(rpois(nbin_per_region * nregion * nsample_per_group, lambda),
+                  nrow = nbin_per_region * nregion,
+                  ncol = nsample_per_group)
+    colnames(mat) <- paste0(group_id, '_', 1:nsample_per_group)
+    rownames(mat) <- paste0(row_id, '_', 1:(nbin_per_region * nregion))
+    return(mat)
+}
+
+## Create assay matrix
+mat_l <- purrr::pmap(list(nbin_per_region, nregion, n_per_group,
+                          lambda_per_group, labels_per_group),
+                     .sim_data)
+mat <- do.call(cbind, mat_l)
+
+## coldata
+cdf <- DataFrame(sample = colnames(mat),
+                 group = rep(labels_per_group, times = n_per_group))
+
+
+## rowranges
+rr <- makeGRangesFromDataFrame(data.frame(
+    seqnames = 'chr1',
+    start = seq(1, by = 25, length.out = nbin_per_region[1] * nregion[1]),
+    end = seq(25, by = 25, length.out = nbin_per_region[1] * nregion[1]),
+    region_id = paste0('region_', rep(1:nregion[1], each = nbin_per_region[1]))
+), keep.extra.columns = TRUE)
+
+## rowdata - specify rowRanges groups (region IDs)
+rd <- DataFrame(
+    region_id = paste0('region_', rep(1:nregion[1], each = nbin_per_region[1]))
+)
+
+## Create SCE
+sce <- SingleCellExperiment(
+    assays = list(counts = mat),
+    colData = cdf,
+    rowRanges = rr
+)
+rowData(sce) <- rd
+
+## Test runs ===================================================================
+## Common inputs
+band <- 5
+quantile = 0.9
+compare <- c('A', 'B')
+
+
+## Create inputs for regular ANY method ----------------------------------------
+x <- counts(sce) # or x = sce
+groups <- colData(sce)$group
+regions <- rowData(sce)$region_id
+
+
+out <- distill(x, compare, groups, regions, band, quantile)
+
+
+## Create input for SCE method -------------------------------------------------
+## x <- sce
+group_by <- 'group'
+region_by <- 'region_id'
+assay.type <- 'counts'
+
+## Running and rerunning with SCe, saving results into metadata
+out <- distill(sce,
+               compare = compare, group_by = group_by,
+               region_by = region_by,
+               band = 10, quantile = 0.8,
+               assay.type = assay.type) 
+
+out <- distill(out,
+               compare = compare, group_by = group_by,
+               region_by = region_by,
+               band = 100, quantile = 0.8,
+               assay.type = assay.type)
+```
+
+
+
+
+## Test with Previous Data
+
+
+```{r}
+library(ChIPtest)
+data(data1)
+data(data4)
+
+## Convert data to standard "ANY" form
+.convert_data <- function(d, s = 'Sample', r_prefix = 'bin') {
+    dr <- c()
+    for (i in 1:nrow(d)) {
+        dr <- c(dr, as.vector(d[i, ]))
+    }
+    df <- data.frame(dr)
+    colnames(df) <- s
+    rownames(df) <- paste0(r_prefix, '_', 1:nrow(df))
+    return(df)
+}
+
+d1 <- .convert_data(data1, 's1')
+d4 <- .convert_data(data4, 's4')
+dm <- cbind(d1, d4) 
+rd <- data.frame(region_id = rep(paste0('region_', 1:5), each = 280))
+cd <- data.frame(sample = c('s1', 's4'), group = c('g1', 'g2'))
+
+
+stat <- distill(dm, c('g1', 'g2'), cd$group, rd$region_id, band = 5, quantile = 0.8)
+stat_ct <- TS_kernel(data4 - data1, 5, 0.8) # save as above except for sign
+
+```
