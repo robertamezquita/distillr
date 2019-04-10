@@ -68,7 +68,9 @@
 
         ## Split by region per comparison
         ## Estimate the variance in data
-        sigma <- bpmapply(.core_estimate_variance, s1, s2, BPPARAM = BPPARAM)
+        sigma <- bpmapply(.core_estimate_variance, s1, s2,
+                          MoreArgs = list(band = band),
+                          BPPARAM = BPPARAM)
 
         ## Adjust the variance using an empirical bayesian approach
         ## Any variances that are equal to zero are set to min nonzero value
@@ -104,11 +106,14 @@
 # Internal functions.
 #############################################################
 
-.create_hat_matrix <- function(n) {
+.create_hat_matrix <- function(n, band) {
     ## Create Nadaraya-Watson Hat matrix
     ## - square, sym matrix = individual kernels corresponding
     ##   to normal dist centered at each bin, where increasing
     ##   i moves along the length of the region
+    ind <- 1:n / n        # bin indicator var
+    hwidth <- band / n    # corollary for proportion of data observed per bin
+    
     Idt <- diag(rep(1, n))
     Snw <- apply(Idt, 2, function(y) {
         ksmooth(ind, y, 
@@ -118,14 +123,14 @@
     return(Snw)
 }
 
-.core_estimate_variance <- function(r1, r2) {
+.core_estimate_variance <- function(r1, r2, band) {
     diff <- r1 - r2       # difference vector
     n <- length(diff)     # number of bins observed
     hwidth <- band / n    # corollary for proportion of data observed per bin
     ind <- 1:n / n        # bin indicator var
 
     ## Create the Nadaraya-Watson hat matrix
-    Snw <- .create_hat_matrix(n)
+    Snw <- .create_hat_matrix(n, band)
     
     ## Get kernel smoothed version of difference vector
     diff_ks <- ksmooth(ind, diff, kernel = 'normal', bandwidth = hwidth)$y
@@ -159,7 +164,7 @@
     sign <- sign(sum(diff_adj_ks))
 
     ## Get final test stat under the null with the Wilson-Hilferty transform
-    Snw <- .create_hat_matrix(n)
+    Snw <- .create_hat_matrix(n, band)
     Amax <- Snw %*% Snw
     eigenvalue <- as.numeric(eigen(Amax)$values)
     dof <- sum(eigenvalue)^2 / sum(eigenvalue^2)
@@ -188,7 +193,7 @@ setMethod("distill", "ANY", .distill)
 #' @importFrom S4Vectors "metadata<-"
 #' @importFrom S4Vectors DataFrame SimpleList
 #' @importFrom S4Vectors cbind
-setMethod("distill", "SingleCellExperiment", function(x,
+setMethod("distill", "SummarizedExperiment", function(x,
                                                       compare, group_by,
                                                       region_by,
                                                       band, quantile,
