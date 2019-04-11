@@ -86,7 +86,8 @@
         ## Test statistics portion
         ## Calculate the squared kernel estimator for T_lambda
         ## we get this under the data not the null hypothesis
-        ts_l <- bpmapply(.core_signed_ts, s1, s2, sigma_l, BPPARAM = BPPARAM)
+        ts_l <- bpmapply(.core_signed_ts, s1, s2, sigma_l,
+                         MoreArgs = list(band = band), BPPARAM = BPPARAM)
 
         ## Convert to data frame ordered by region appearance; assign into list
         tstat <- c(unlist(ts_l[1, ]), use.names = names(ts_l[1, ]))
@@ -147,7 +148,7 @@
 }
 
     
-.core_signed_ts <- function(r1, r2, sd) {
+.core_signed_ts <- function(r1, r2, sd, band) {
     diff <- r1 - r2       # difference vector
     n <- length(diff)     # number of bins observed
     hwidth <- band / n    # corollary for proportion of data observed per bin
