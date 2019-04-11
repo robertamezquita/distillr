@@ -216,6 +216,10 @@ setMethod("distill", "SummarizedExperiment", function(x,
     groups <- .choose_values(x, group_by, mode = 'column', search = 'metadata')$val
     regions <- .choose_values(x, region_by, mode = 'row', search = 'metadata')$val
 
+    ## Coerce grouping vars to character
+    groups <- as.character(groups)
+    regions <- as.character(regions)
+    
     ## Run main method
     ds <- .distill(assay(x, i = assay.type),
                    compare = compare, groups = groups,
