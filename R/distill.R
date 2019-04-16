@@ -246,33 +246,3 @@ setMethod("distill", "SummarizedExperiment", function(x,
 
     return(x)
 })
-
-
-
-
-
-        ## SCRAP ====================
-
-        
-    ##         ## TEMP RETURN DUMMY OBJECT ------------------------------------------------
-    ## ## Calc how many region (row) groups there are
-    ## row_groups <- length(unique(regions))
-
-    ## ## TEMP: use the BPPARAM argr
-    ## tmp <- bplapply(1:10, sum, BPPARAM = BPPARAM)
-    
-    ## ## Return dummy object
-    ## out <- list(
-    ##     ## per row stats (for rowData/rowRanges)
-    ##     per_row_stats = DataFrame(diff = rep(0, nrow(x)),
-    ##                               hold = rep(1, nrow(x))),
-    ##     ## row stats - nested/grouped by region (for metadata)
-    ##     per_rowgroup_stats = DataFrame(stat = rep(0, row_groups),
-    ##                                    pval = rep(0, row_groups)),
-    ##     ## parametrization
-    ##     method_params = list(compare = compare,
-    ##                          band = band,
-    ##                          quantile = quantile,
-    ##                          subset.row = subset.row,
-    ##                          subset.col = subset.col)
-    ## )
