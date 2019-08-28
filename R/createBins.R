@@ -1,3 +1,4 @@
+#' @importFrom GenomicRanges resize width ranges
 .tile_variable_regions <- function(gr, bin.width,
                               region.col = 'region_id',
                               region.prefix = 'region_') {
@@ -11,6 +12,7 @@
     .tile_annotate_combine(gr, bin.width, region.col, region.prefix)
 }
 
+#' @importFrom GenomicRanges resize
 .tile_constant_regions <- function(gr, bin.width, region.width,
                                    region.col = 'region_id',
                                    region.prefix = 'region_') {
@@ -40,12 +42,14 @@
 # Internal functions.
 #############################################################
 
+#' @importFrom GenomicRanges "mcols<-"
 .append_region_id_to_granges <- function(x, row, region.col, region.prefix) {
     ## add a region id column to a GRanges object
-    mcols(x)[[region.col]] <- paste0(region.prefix, row)
+    GenomicRanges::mcols(x)[[region.col]] <- paste0(region.prefix, row)
     return(x)
 }
 
+#' @importFrom GenomicRanges tile
 .tile_annotate_combine <- function(gr, bin.width, region.col, region.prefix) {
     ## Tile each region (peak) by bin width
     tl <- tile(gr, width = bin.width)
@@ -75,22 +79,23 @@
 #' @export
 setGeneric("createBins", function(x, bin.width = NULL, region.width = NULL, ...) standardGeneric("createBins"))
 
-## Data.frame method
+#' @importFrom GenomicRanges makeGRangesFromDataFrame
+#' @export
 setMethod("createBins", "data.frame", function(x, bin.width = NULL, region.width = NULL, ...) {
     ## Check that prereq columns are present
     req_cols <- c('seqnames', 'start', 'end')
-    if (sum(req_cols %in% colnames(df)) != 3) {
+    if (sum(req_cols %in% colnames(x)) != 3) {
         stop("Input must have columns `seqnames`, `start`, and `end`")
     }
 
     ## Convert to GRanges and run the "default" method
-    gr <- makeGRangesFromDataFrame(x, keep.extra.columns = TRUE)
+    gr <- GenomicRanges::makeGRangesFromDataFrame(x, keep.extra.columns = TRUE)
 
     createBins(gr, bin.width, region.width, ...)
 })
 
 
-## GRanges method
+#' @export
 setMethod("createBins", "GRanges", function(x, 
                                             bin.width = NULL,
                                             region.width = NULL,
@@ -113,6 +118,8 @@ setMethod("createBins", "GRanges", function(x,
 
 
 ## Testing
-## df <- data.frame(seqnames=c('chr1', 'chr2', 'chr1'),
-##                  start = c(1, 100, 25), end = c(50, 200, 75))
-## gr <- makeGRangesFromDataFrame(df)
+## regions_df <- data.frame(seqnames=c('chr1', 'chr2', 'chr1'),
+##                   start = c(1, 100, 25), end = c(50, 200, 75))
+## regions_gr <- GenomicRanges::makeGRangesFromDataFrame(regions_df)
+## bins <- createBins(regions_df, 10)
+## createBins(regions_gr, 10)

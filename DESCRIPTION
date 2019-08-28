@@ -22,4 +22,5 @@ Imports:
     SummarizedExperiment,
     S4Vectors,
     BiocGenerics,
-    methods
+    methods,
+    GenomicRanges
