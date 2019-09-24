@@ -1,5 +1,5 @@
 ---
-title: "Testing"
+title: "Distillr Package Introduction"
 author: "Robert Amezquita"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -16,14 +16,22 @@ knitr::opts_chunk$set(
 )
 ```
 
-Testing out ideas here.
+# Introduction
+
+The `distillr` package compares epigenomic regions using a non-parametric test statistic.
 
 
-# Data Representation
+## Creating Simulated Data
 
-## SCE representation of data
+Here we create some simulated data that spans many regions across three groups of samples with differing numbers of replicates within them. 
+
+While the data can be most simply across separate tables - the counts in a matrix (`mat`), sample (column) groupings in a data frame (`cdf`), and a feature (row) groupings/coordinates in another object such as a `GRanges` object (`rr`) - these three can be combined into a singular representation via `SingleCellExperiment`. This eases manipulation of the data by keeping all relationships in-tact, no matter any downstream subsetting operations that may take place.
+
+Note however that the `distillr` methods take both matrices as well as `SingleCellExperiment` objects.
+
 
 ```{r}
+library(distillr) # devtools::load_all()
 library(SingleCellExperiment)
 library(tidyverse)
 
@@ -80,50 +88,59 @@ sce <- SingleCellExperiment(
     colData = cdf,
     rowRanges = rr
 )
+```
 
+## Testing `distillr`
 
-## Test runs ===================================================================
-## Common inputs
+To test out the main package functionality in comparing regions, we set up the following test run comparing groups 'A' and 'B'.
+
+First we set the key parameters to the method - the `band` and `quantile`, and the groups to `compare`.
+
+```{r}
+## Parameters
 band <- 5
 quantile = 0.9
 compare <- c('A', 'B')
+```
 
+Then we can test out the method with just a simple matrix input and character vectors describing the column and row groupings via the `groups` and `regions` input.
 
+```{r}
 ## Create inputs for regular ANY method ----------------------------------------
 x <- counts(sce) # or x = sce
 groups <- colData(sce)$group
 regions <- rowData(sce)$region_id
 
-out <- distill(x, compare, groups, regions, band, quantile)
+out <- distill(x,
+               compare, groups,
+               regions,
+               band, quantile)
+```
 
+Finally, we can test the method against the `SingleCellExperiment` input, specifying the groupings that are already defined within the objects `rowData` and `colData` components.
 
+```{r}
 ## Create input for SCE method -------------------------------------------------
-## x <- sce
 group_by <- 'group'
 region_by <- 'region_id'
 assay.type <- 'counts'
 
-## Running and rerunning with SCe, saving results into metadata
+## Running and rerunning with SCE, saving results into metadata
 out_sce <- distill(sce,
                    compare = compare, group_by = group_by,
                    region_by = region_by,
                    band = 10, quantile = 0.8,
-                   assay.type = assay.type) 
-
-out <- distill(out,
-               compare = compare, group_by = group_by,
-               region_by = region_by,
-               band = 100, quantile = 0.8,
-               assay.type = assay.type)
+                   assay = assay.type)
 ```
 
 
 
 
-## Test with Previous Data
+## Testing with Previous Data and Method `ChIPtest`
 
+To compare with the previously published method, below is the verification of the similarity between the two methods.
 
-```{r}
+```{r, fig.show = 'hide'}
 library(ChIPtest)
 data(data1)
 data(data4)
@@ -149,5 +166,23 @@ cd <- data.frame(sample = c('s1', 's4'), group = c('g1', 'g2'))
 
 stat <- distill(dm, c('g1', 'g2'), cd$group, rd$region_id, band = 5, quantile = 0.8)
 stat_ct <- TS_kernel(data4 - data1, 5, 0.8) # save as above except for sign
+```
 
+Here's the two results, first from the `distillr` package:
+
+```{r}
+stat
+```
+
+And now from the `ChIPtest` package:
+
+```{r}
+stat_ct
+```
+
+
+# Session Info {-}
+
+```{r}
+sessionInfo()
 ```

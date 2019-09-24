@@ -1,4 +1,5 @@
 #' @importFrom BiocParallel bplapply SerialParam
+#' @importFrom utils combn
 .distill <- function(x,
                      compare, groups,
                      regions, 
@@ -107,6 +108,7 @@
 # Internal functions.
 #############################################################
 
+#' @importFrom stats ksmooth
 .create_hat_matrix <- function(n, band) {
     ## Create Nadaraya-Watson Hat matrix
     ## - square, sym matrix = individual kernels corresponding
@@ -124,6 +126,7 @@
     return(Snw)
 }
 
+#' @importFrom stats ksmooth
 .core_estimate_variance <- function(r1, r2, band) {
     diff <- r1 - r2       # difference vector
     n <- length(diff)     # number of bins observed
@@ -199,7 +202,7 @@ setMethod("distill", "SummarizedExperiment", function(x,
                                                       region_by,
                                                       band, quantile,
                                                       ...,
-                                                      assay.type = "counts",
+                                                      assay = "counts",
                                                       res.out = FALSE)
 {
     ## `group_by` should refer to a column
@@ -222,7 +225,7 @@ setMethod("distill", "SummarizedExperiment", function(x,
     regions <- as.character(regions)
     
     ## Run main method
-    ds <- .distill(assay(x, i = assay.type),
+    ds <- .distill(assay(x, i = assay),
                    compare = compare, groups = groups,
                    regions = regions,
                    band, quantile,

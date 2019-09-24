@@ -23,4 +23,7 @@ Imports:
     S4Vectors,
     BiocGenerics,
     methods,
-    GenomicRanges
+    GenomicRanges,
+    csaw,
+    SingleCellExperiment,
+    BiocParallel
